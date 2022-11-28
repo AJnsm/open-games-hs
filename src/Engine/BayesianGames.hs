@@ -12,6 +12,7 @@ module Engine.BayesianGames
   , Agent(..)
   , Payoff(..)
   , dependentDecision
+  , dependentRoleDecision
   , dependentEpsilonDecision
   , fromLens
   , fromFunctions
@@ -23,6 +24,7 @@ module Engine.BayesianGames
   , playDeterministically
   , discount
   , addPayoffs
+  , addRolePayoffs
   ) where
 
 
@@ -91,6 +93,22 @@ dependentDecision name ys = OpenGame {
                   in deviationsInContext 0 name x theta strategy u (ys x)
               | (theta, x) <- support h]) ::- Nil }
 
+
+dependentRoleDecision :: (Eq x, Show x, Ord y, Show y) => ((String,x) -> [y]) -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] (String,x) () y Payoff
+dependentRoleDecision ys = OpenGame {
+  play = \(a ::- Nil) -> let v (name,x) = do {y <- runKleisli a x; return (name, y)}
+                             u name r =  modify (adjustOrAdd (+ r) r name)
+                            in StochasticStatefulOptic v u,
+  evaluate = \(a ::- Nil) (StochasticStatefulContext h k) ->
+     (concat [ let u y = expected (evalStateT (do {t <- lift (bayes h (name,x));
+                                                   r <- k t y;
+                                                   gets ((+ r) . HM.findWithDefault 0.0 name)})
+                                    HM.empty)
+                   strategy = runKleisli a x
+                  in deviationsInContext 0 name x theta strategy u (ys (name,x))
+              | (theta, (name,x)) <- support h]) ::- Nil }
+
+
 dependentEpsilonDecision :: (Eq x, Show x, Ord y, Show y) => Double -> String -> (x -> [y])  -> StochasticStatefulBayesianOpenGame '[Kleisli Stochastic x y] '[[DiagnosticInfoBayesian x y]] x () y Payoff
 dependentEpsilonDecision epsilon name ys = OpenGame {
   play = \(a ::- Nil) -> let v x = do {y <- runKleisli a x; return ((), y)}
@@ -155,6 +173,14 @@ addPayoffs :: String -> StochasticStatefulBayesianOpenGame '[] '[] Payoff () () 
 addPayoffs name = OpenGame {
   play = \_ -> let v x = return (x, ())
                    u value () = modify (adjustOrAdd (\x -> x + value) value name)
+                 in StochasticStatefulOptic v u,
+  evaluate = \_ _ -> Nil}
+
+-- add payoffs with roles being fed from the outside
+addRolePayoffs :: StochasticStatefulBayesianOpenGame '[] '[] (Agent,Payoff) () () ()
+addRolePayoffs = OpenGame {
+  play = \_ -> let v x = return (x, ())
+                   u (name,value) () = modify (adjustOrAdd (\x -> x + value) value name)
                  in StochasticStatefulOptic v u,
   evaluate = \_ _ -> Nil}
 

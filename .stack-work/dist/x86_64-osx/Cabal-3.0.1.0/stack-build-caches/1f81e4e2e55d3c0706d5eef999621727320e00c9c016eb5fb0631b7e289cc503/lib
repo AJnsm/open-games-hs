@@ -1,0 +1,84 @@
+/Users/s1855283/.stack/programs/x86_64-osx/ghc-8.8.4/lib/ghc-8.8.4/include/ghcversion.h:
+  hash: 297e8571427d670d413977834f5cdfc77cb89051d2f5b8302303c442346d15d0
+/Users/s1855283/Desktop/EPF/open-games-hs/.stack-work/dist/x86_64-osx/Cabal-3.0.1.0/build/autogen/Paths_open_games_hs.hs:
+  hash: 9f08b962fe974969cf0ab840b5bd234e079cb6046b271dc8f6254a2fef0bc39f
+/Users/s1855283/Desktop/EPF/open-games-hs/.stack-work/dist/x86_64-osx/Cabal-3.0.1.0/build/autogen/cabal_macros.h:
+  hash: 88a8fedd81a5f27f180908a026440b8b80f556bc012be6888e62e2f1cf2fb630
+/Users/s1855283/Desktop/EPF/open-games-hs/README.md:
+  hash: f752d5e560b18a3baf687ff3e89736e7e5cd973e1899b8f652c112b4ce91753b
+/Users/s1855283/Desktop/EPF/open-games-hs/open-games-hs.cabal:
+  hash: c5342c32aae002e8aa4ad190f84546354511417c84372c282aa7254b1fd2eaa4
+/Users/s1855283/Desktop/EPF/open-games-hs/package.yaml:
+  hash: b74f085953fac68b0677f38563cb5886de5d8907567eb1931879b6d2df58ae79
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Data/Utils.hs:
+  hash: 7b8f9502df0ef43df84c07d35394c663b685e6833da49a61bf32a2b49405e47d
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/AtomicGames.hs:
+  hash: 9443301abd822de44f3b95be2814856802786a536fdd787a3c72388c7791c322
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/BayesianGames.hs:
+  hash: 5c822864901f9d4cc55bc16104f7fda5ca55fd8046aa675065d1e0521b37b5e7
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/BayesianGamesNonState.hs:
+  hash: b4307b4e640c368cd76e185e4b7aabbdfd1a488cc14fe4e4dba47880f14f1deb
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/Diagnostics.hs:
+  hash: 802f22d6fb3d4c5fc4462efc759ca74e299399043f01ec28e3c9c4973f59bbd8
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/Engine.hs:
+  hash: 5fecfc9a62939c72d85ce01502d23e0c52376c4570b42dcae6e9f87937fdef6a
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/IOGames.hs:
+  hash: 26c9212ba6eeb31ad85366ea38a0adeaa01102bc60c63d8dc986a9db15d8e68c
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/OpenGames.hs:
+  hash: 45ccd18169633d6c509c2a496c0b57c6df42b106454332fb3660f700610faf02
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/OpticClass.hs:
+  hash: 4bfcb6e756280c150b54c2d7d50931a2f2ae9d0d80fa132ac51a3336a7038e39
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Engine/TLL.hs:
+  hash: a645bbd0965c1136c7c0e245df96eac8b020c52da963bea2fd079ecef3e0dfd1
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Auctions/AuctionSupportFunctions.hs:
+  hash: b6218ea2e3aee4dd1ca01b11ada71b4a230d0b929ab18d8e5bf546aef5d5e2b5
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Auctions/ChooseReservePrice.hs:
+  hash: 243fb4ca4c8c3e96c3911aaf84ba0510f37b0df06ab823f84fc9e3cfac71b318
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Auctions/DutchAuction.hs:
+  hash: 871764d6ddd364381404c31af3895c288de56862314ff1a6ee772e94c251114e
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Auctions/SequentialAuction.hs:
+  hash: 062562e08131522166ab47c5427768ddc75504f6be4fe75794596a8931d3bf5a
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Auctions/SimultaneousBidAuction.hs:
+  hash: 6db2070f3c9e0f43df146905010718ed39022cdd9a9fd90db1d0dbd95fe89d10
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Bayesian.hs:
+  hash: 3254a353e37678dd39867955251d7b3f6a2b1c19806ab639c5d2fddbf2195d93
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Decision.hs:
+  hash: 24d6ad8698c8955ec72d47498987b5f79e337542c6436044383df477f2ba007d
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Markov/NStageMarkov.hs:
+  hash: ac63143f97d7bfd76d8798b67ecacda5671ec85761de5bdaf9bddf7962d6db4b
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Markov/RepeatedPD.hs:
+  hash: 821406240fe632566ffd48bb4b2f2e731c9027dc605175cd141e07292006d543
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Markov/RepeatedPDNonState.hs:
+  hash: fee7867ad6cefbf2cdf5dcdafbaa66edf6b2320f77e81df47879e2cfd8bac47f
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Markov/TestSimpleMonteCarlo.hs:
+  hash: 66eca1c44e7914727b69909bbdb15e52e667c3fd6105b9179d0fe831871082a1
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Markov/TestSimpleMonteCarlo/Continuation.hs:
+  hash: e53de8c27249d2c0e2a0e69b5ddeffeddfaec688f2ec378bc88f59178c6b792b
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Markov/TwoStageMarkov.hs:
+  hash: 9bcb042ca7e94adc1f00b53ff4d991e36a74879db61763914b0add9d3af3f60e
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/SequentialMoves.hs:
+  hash: cbc94070634000504e8592b03d1b59170a72142ad1cfbee75669e5f8b8b369e1
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/SimultaneousMoves.hs:
+  hash: 47308135349425494fb58578d1cb3e16f332d0cd3c75e2f8ca9bdc3c98d62fed
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Staking/AndGateMarkov.hs:
+  hash: 6f038e3f5f8abed70de107ddf1d860791ca92b6be00140e6ceaa7b8b53cbf545
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Examples/Staking/AndGateMarkovMC.hs:
+  hash: a6465317a6c59831e20fd9d46934dcaa374f79328171c4a5deffebff451ed15f
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Graphics.hs:
+  hash: f09f41de5f6823cebdcfc08207b84bfb9374549d8315dc188687eec3575eed00
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Preprocessor/AbstractSyntax.hs:
+  hash: d873205b2374adbbd202d719523c04f4bcd79353425006af0547c8b53ccc7a9d
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Preprocessor/Compile.hs:
+  hash: 3cc298470c2f9fb5b046770089a4dcadcd79cca040ffdacf2d5aa1441ad669f5
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Preprocessor/Lambda.hs:
+  hash: c3678995ad7387f53f5d271e060918fa8a1c39c6eb90791e1b819d5c15e89170
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Preprocessor/Parser.hs:
+  hash: fbebdef1a2045615bc1bb7edac70dfd280d7d40b6143cd88ff008138c84c32bd
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Preprocessor/Preprocessor.hs:
+  hash: 05fb86df6434153a6a8438a8ffa78430a3acc1eeffdaa1946484f2e4f15425bf
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Preprocessor/TH.hs:
+  hash: 67f7786755d4981da9d0b6d82b0d67bbec186b391eac57b4d470852bf6c5895c
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Preprocessor/THSyntax.hs:
+  hash: 7fc3c2dd4f6252ea8983c96d0fad9cb9d911c5715edbfc1bc6086018afc2d352
+/Users/s1855283/Desktop/EPF/open-games-hs/src/Preprocessor/Types.hs:
+  hash: dec6c846b1ea0d5ea40ab392011000d1dae7d35cc24721934f82e2c7525560b3

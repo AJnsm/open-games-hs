@@ -32,6 +32,7 @@ library:
     - Examples.Bayesian
     - Examples.Decision
     - Examples.SequentialMoves
+    - Examples.PieCutting
     - Examples.Auctions.AuctionSupportFunctions
     - Examples.Auctions.ChooseReservePrice
     - Examples.Auctions.DutchAuction

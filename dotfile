@@ -1,0 +1,29 @@
+digraph {
+    0 [shape=box
+      ,label="AliceDraw "];
+    1 [shape=box,label="BobDraw "];
+    2 [shape=box
+      ,label="CarolDraw "];
+    3 [shape=box,label="AliceBid "];
+    4 [shape=box,label="BobBid "];
+    5 [shape=box,label="CarolBid "];
+    6 [shape=box,label="Auction "];
+    0 -> 3 [label=aliceValue
+           ,style=solid];
+    1 -> 4 [label=bobValue
+           ,style=solid];
+    2 -> 5 [label=carolValue
+           ,style=solid];
+    3 -> 6 [label=aliceDec
+           ,style=solid];
+    4 -> 6 [label=bobDec
+           ,style=solid];
+    5 -> 6 [label=carolDec
+           ,style=solid];
+    6 -> 3 [label=payments
+           ,style=dotted];
+    6 -> 4 [label=payments
+           ,style=dotted];
+    6 -> 5 [label=payments
+           ,style=dotted];
+}

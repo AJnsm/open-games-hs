@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -38,6 +38,7 @@ library
       Examples.Bayesian
       Examples.Decision
       Examples.SequentialMoves
+      Examples.PieCutting
       Examples.Auctions.AuctionSupportFunctions
       Examples.Auctions.ChooseReservePrice
       Examples.Auctions.DutchAuction
@@ -54,6 +55,8 @@ library
       Engine.BayesianGamesNonState
       Engine.IOGames
       Examples.Markov.NStageMarkov
+      Examples.PieCutting_BigPlayer
+      Examples.PieCutting_open
       Examples.Staking.AndGateMarkov
       Examples.Staking.AndGateMarkovMC
       Paths_open_games_hs
