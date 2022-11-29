@@ -17,9 +17,6 @@ type Offer = (Double, Double)
 data ResponderAction = Accept | Reject
   deriving (Eq,Ord,Show)
 
-openPieSharingGamePayoff ::  Offer -> ResponderAction -> Payoff
-openPieSharingGamePayoff newOffer nextResponse =
-    if nextResponse == Accept then (snd newOffer) else (fst newOffer)
 
 propagateChosenPiece :: Offer -> ResponderAction -> Double
 propagateChosenPiece offer response = if response == Accept then (fst offer) else (snd offer)
@@ -50,7 +47,7 @@ respondToOffer_dependent = [opengame|
    |]
 
 
-offerNewSlice_dependent payoffFactor = [opengame|
+offerNewSlice_dependent = [opengame|
    inputs    : playerName, offer, response ;
    feedback  : ;
 
@@ -65,7 +62,7 @@ offerNewSlice_dependent payoffFactor = [opengame|
    feedback  : ;
    operation : dependentRoleDecision (\(playerName, x) -> actionSpace x) ;
    outputs   : newOfferedPiece ;
-   returns   : payoffFactor * (openPieSharingGamePayoff (newOfferedPiece, chosenPiece- newOfferedPiece) newResponse) ;
+   returns   : 0 ;
 
    inputs    : chosenPiece, newOfferedPiece  ;
    feedback  : ;
@@ -79,20 +76,20 @@ offerNewSlice_dependent payoffFactor = [opengame|
    returns   : newResponse;
    |]
    where 
-    actionSpace x = [0, 0.101 .. x]
--- ^ make sure cuts cannot be exactly half. 
+    actionSpace x = [0, 0.1 .. x]
 
 
 
 orderBySize :: (Agent, Agent, Offer, ResponderAction) -> ((Agent, Payoff), (Agent, Payoff))
-orderBySize (p1Name, p2Name, offer, response) = if (pieceP1 >= pieceP2) then ((p1Name, pieceP1), (p2Name, pieceP2)) else ((p2Name, pieceP2), (p1Name, pieceP1))
+orderBySize (p1Name, p2Name, offer, response) = if (pieceP1 >= pieceP2) 
+    then ((p1Name, pieceP1), (p2Name, pieceP2)) 
+    else ((p2Name, pieceP2), (p1Name, pieceP1))
     where
         pieceP1 = if response==Accept then (snd offer) else (fst offer)
         pieceP2 = if response==Accept then (fst offer) else (snd offer)
 
 -- ******** unit of 2 players with the BigPlayer rule *********
-
-bigPlayers_unit player2Name payoffBP = [opengame|
+bigPlayer_unit player2Name payoffBP = [opengame|
 
    inputs    : inputBigPlayer, inputOffer  ;
    feedback  : ;
@@ -102,7 +99,7 @@ bigPlayers_unit player2Name payoffBP = [opengame|
    //Player 1 is last round's BigPlayer, so quickly "accepts" the full piece to propagate their piece into this round. They offer a slice to Player 2, but get no payoff yet!
    inputs    : inputBigPlayer, inputOffer, Accept  ;
    feedback  :  ;
-   operation : offerNewSlice_dependent 0;
+   operation : offerNewSlice_dependent;
    outputs   : offerP1   ;
    returns   : responseP2_backwards ;
 
@@ -144,7 +141,7 @@ bigPlayers_unit player2Name payoffBP = [opengame|
 
 -- -- -- ********* Composition **********
 
-bigPlayers_composed_2Games = [opengame|
+bigPlayers_composed_3Players = [opengame|
 
    inputs    : inputBigPlayer, inputOffer ;
    feedback  : ;
@@ -153,13 +150,13 @@ bigPlayers_composed_2Games = [opengame|
 
    inputs    : inputBigPlayer, inputOffer ;
    feedback  : ;
-   operation : bigPlayers_unit "p2" 0 ;
+   operation : bigPlayer_unit "p2" 0 ;
    outputs   : bigPlayer1, offer1 ;
    returns   :  ;
 
    inputs    : bigPlayer1, offer1;
    feedback  : ;
-   operation : bigPlayers_unit "p3" 1 ;
+   operation : bigPlayer_unit "p3" 1 ;
    outputs   : bigPlayer2, newOffer  ;
    returns   :  ;
    
@@ -175,19 +172,14 @@ contextContPie :: Double -> StochasticStatefulContext
           ()
           (String, Offer)
           ()
-
-contextContPie fullPieSize = StochasticStatefulContext (pure ((),("p1", (fullPieSize, 0)))) (\_ _-> pure ())
+contextContPie fullPieSize = StochasticStatefulContext 
+    (pure ((),("p1", (fullPieSize, 0)))) (\_ _-> pure ())
 
 
 
 
 -- *************** Strategies ***************
 
-pureAccept :: Offer -> Stochastic ResponderAction
-pureAccept x = playDeterministically Accept
-
-pureReject :: Offer -> Stochastic ResponderAction
-pureReject x = playDeterministically Reject
 
 varAccept :: Double -> Offer -> Stochastic ResponderAction
 varAccept r x = if (fst x) >= r then playDeterministically Accept else playDeterministically Reject
@@ -205,19 +197,26 @@ varOffer_abs r x = playDeterministically r
 
 
 -- Strategies: p1 offers -> p2 responds -> BP offers -> p3 responds
-strat_bigPlayer_2Games_test = Kleisli (varOffer_abs 3.33) ::- Kleisli  (varAccept_conditional 3.33 6.66) ::- Kleisli (varOffer_abs 3.33) ::- Kleisli (varAccept 3.33) ::- Nil
+strat_bigPlayer_3Players_test = 
+    Kleisli (varOffer 0.51) ::- Kleisli  (varAccept 3.33) ::- 
+    Kleisli (varOffer 0.51) ::- Kleisli (varAccept 3.33) ::- Nil
+
+
+strat_bigPlayer_3Players_eq = 
+    Kleisli (varOffer_abs 3.33) ::- Kleisli  (varAccept_conditional 3.33 6.66) ::-
+    Kleisli (varOffer_abs 3.33) ::- Kleisli (varAccept 3.33) ::- Nil
 
 -- *************** Evaluation ***************
 
-evalOpenPie_BigPlayer_2Games strat = evaluate (bigPlayers_composed_2Games) strat (contextContPie 10)
-isEquilibrium_BigPlayer_2Games strat = generateIsEq $ evalOpenPie_BigPlayer_2Games strat 
+evalOpenPie_BigPlayer_3Players strat = evaluate (bigPlayers_composed_3Players) strat (contextContPie 10)
+isEquilibrium_BigPlayer_3Players strat = generateIsEq $ evalOpenPie_BigPlayer_3Players strat 
 
 
 
 -- *********** Bigger composition ************
 
 
-bigPlayers_composed_4Games = [opengame|
+bigPlayers_composed_4Players = [opengame|
 
    inputs    : inputBigPlayer, inputOffer ;
    feedback  : ;
@@ -226,19 +225,19 @@ bigPlayers_composed_4Games = [opengame|
 
    inputs    : inputBigPlayer, inputOffer ;
    feedback  : ;
-   operation : bigPlayers_unit "p2" 0 ;
+   operation : bigPlayer_unit "p2" 0 ;
    outputs   : bigPlayer1, offer1 ;
    returns   :  ;
 
    inputs    : bigPlayer1, offer1;
    feedback  : ;
-   operation : bigPlayers_unit "p3" 0 ;
+   operation : bigPlayer_unit "p3" 0 ;
    outputs   : bigPlayer2, offer2  ;
    returns   :  ;
 
    inputs    : bigPlayer2, offer2;
    feedback  : ;
-   operation : bigPlayers_unit "p4" 1 ;
+   operation : bigPlayer_unit "p4" 1 ;
    outputs   : bigPlayer3, newOffer  ;
    returns   :  ;
 
@@ -250,12 +249,18 @@ bigPlayers_composed_4Games = [opengame|
 
 
 -- Strategies: p1 offers -> p2 responds -> BP offers -> p3 responds. -> BP2 offers -> p4 responds 
-strat_bigPlayer_4Games_test = Kleisli (varOffer_abs 2.5) ::- Kleisli  (varAccept_conditional 2.5 7.5) ::- Kleisli (varOffer_abs 2.5) ::- Kleisli  (varAccept_conditional 2.5 5) ::- Kleisli (varOffer_abs 2.5) ::- Kleisli  (varAccept 2.5 )  ::- Nil
+strat_bigPlayer_4Players_eq = 
+    Kleisli (varOffer_abs 2.49) ::- Kleisli  (varAccept_conditional 2.5 7.5) ::-
+    Kleisli (varOffer_abs 2.49) ::- Kleisli  (varAccept_conditional 2.5 5) ::-
+    Kleisli (varOffer_abs 2.49) ::- Kleisli  (varAccept 2.5 )  ::- Nil
 
 -- *************** Evaluation ***************
 
-evalOpenPie_BigPlayer_4Games strat = evaluate (bigPlayers_composed_4Games) strat (contextContPie 10)
-isEquilibrium_BigPlayer_4Games strat = generateIsEq $ evalOpenPie_BigPlayer_4Games strat 
+evalOpenPie_BigPlayer_4Players strat = evaluate (bigPlayers_composed_4Players) strat (contextContPie 10)
+isEquilibrium_BigPlayer_4Players strat = generateIsEq $ evalOpenPie_BigPlayer_4Players strat 
 
 
--- run: isEquilibrium_BigPlayer_4Games strat_bigPlayer_4Games_test
+-- run: 
+
+-- isEquilibrium_BigPlayer_4Players strat_bigPlayer_4Players_test
+-- isEquilibrium_BigPlayer_3Players strat_bigPlayer_3Players_test
