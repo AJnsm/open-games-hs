@@ -25,85 +25,75 @@ type AccountStates = [Account]
 -- Should this also have a data field?
 type Tx = (AccountID, AccountID, Token, TokenAmount)
 
-type Mempool = [Tx]
 type TxBlock = [Tx]
 
-
-getSender :: Tx -> AccountID
-getSender (sender, _, _, _) = sender
+getAccountID :: Account -> AccountID
+getAccountID (name, _, _) = name
 
 getReceiver :: Tx -> AccountID
 getReceiver (_,receiver, _, _) = receiver
 
 balance :: Account -> Token -> TokenAmount
-balance (userID, amountA, amountB) A = amountA
-balance (userID, amountA, amountB) B = amountB
-
+balance (userID, amountA, amountB) token
+    | token==A = amountA
+    | otherwise =  amountB
 
 uniSwapExchange :: AccountStates -> Tx -> AccountStates
 -- Use lenses to 'modify' account states
 uniSwapExchange accountStates (userID, uniSwapID, token, tokenAmount)
    | userbalanceInsufficient = accountStates
-   | token==A = accountStates & (ix userID) .~ userUpdateA2B & (ix uniSwapID) .~ uniswapUpdateA2B
-   | token==B = accountStates & (ix userID) .~ userUpdateB2A & (ix uniSwapID) .~ uniswapUpdateB2A
+   | otherwise = accountStates & (ix userID) .~ userUpdateA2B & (ix uniSwapID) .~ uniswapUpdate
   where
-   userbalanceInsufficient = balance (accountStates!!userID) token < tokenAmount
+   user_bal = balance (accountStates!!userID)
+   userbalanceInsufficient = user_bal token < tokenAmount
+   uniSwap_bal = balance (accountStates!!uniSwapID)
+   dA = uniSwap_bal A * tokenAmount / (uniSwap_bal B + tokenAmount) 
+   dB = uniSwap_bal B * tokenAmount / (uniSwap_bal A + tokenAmount) 
+   userUpdateA2B = 
+      if token == A
+      then (userID, user_bal A - tokenAmount, user_bal B + dB)
+      else (userID, user_bal A + dA, user_bal B - tokenAmount)
+   uniswapUpdate = 
+      if token == A
+      then (uniSwapID, uniSwap_bal A + tokenAmount, uniSwap_bal B - dB)
+      else (uniSwapID, uniSwap_bal A - dA, uniSwap_bal B + tokenAmount)
 
-   userA = balance (accountStates!!userID) A
-   userB = balance (accountStates!!userID) B
-   uniSwapA = balance (accountStates!!2) A
-   uniSwapB = balance (accountStates!!2) B
-   dA = uniSwapA * tokenAmount / (uniSwapB + tokenAmount) 
-   dB = uniSwapB * tokenAmount / (uniSwapA + tokenAmount) 
-
-   userUpdateA2B = (userID, userA - tokenAmount, userB + dB)
-   userUpdateB2A = (userID, userA + dA, userB - tokenAmount)
-   uniswapUpdateA2B = (uniSwapID, uniSwapA + tokenAmount, uniSwapB - dB)
-   uniswapUpdateB2A = (uniSwapID, uniSwapA - dA, uniSwapB + tokenAmount)
 
 
-
-betOnExchange :: AccountStates -> Double -> Tx -> AccountStates
--- oracle account, bet threshold, bet amount, updated user account
+betOnExchange :: AccountStates -> AccountID -> Double -> Tx -> AccountStates
+-- Old state, price oracle, bet threshold, bet amount, new state
 -- Use lenses to 'modify' account states
-betOnExchange accountStates ratio (userID, betID, betToken, betAmount)
-   | userbalanceInsufficient = accountStates
-   | (uniSwapA/uniSwapB >= ratio && betToken == A) =  accountStates & (ix userID) .~ userUpdateBetA_userWin & (ix betID) .~ betUpdateA_userWin
-   | (uniSwapA/uniSwapB >= ratio && betToken == B) =  accountStates & (ix userID) .~ userUpdateBetB_userWin & (ix betID) .~ betUpdateB_userWin
-   | (uniSwapA/uniSwapB < ratio && betToken == A) =  accountStates & (ix userID) .~ userUpdateBetA_userLose & (ix betID) .~ betUpdateA_userLose
-   | (uniSwapA/uniSwapB < ratio && betToken == B) =  accountStates & (ix userID) .~ userUpdateBetB_userLose & (ix betID) .~ betUpdateB_userLose
+betOnExchange accountStates oracleID ratio (userID, betID, betToken, betAmount)
+   | (userbalanceInsufficient || betAmount<=0) = accountStates
+   | ((uniSwap_bal A)/(uniSwap_bal B) >= ratio) = accountStates & (ix userID) .~ userUpdate_userWin & (ix betID) .~ betUpdate_userWin
+   | ((uniSwap_bal A)/(uniSwap_bal B) <  ratio) = accountStates & (ix userID) .~ userUpdate_userLose & (ix betID) .~ betUpdate_userLose
   where
-   uniSwapA = balance (accountStates!!2) A
-   uniSwapB = balance (accountStates!!2) B
-   userA = balance (accountStates!!userID) A
-   userB = balance (accountStates!!userID) B
-   userbalanceInsufficient = balance (accountStates!!userID) betToken < betAmount
+   uniSwap_bal = balance (accountStates!!oracleID)
+   bet_bal = balance (accountStates!!betID)
+   user_bal = balance (accountStates!!userID)
+   userbalanceInsufficient = user_bal betToken < betAmount
 
-   betA = balance (accountStates!!betID) A
-   betB = balance (accountStates!!betID) B
+   -- The prize is either the amount bet, or the remaining balance if that is less
+   prize = minimum [betAmount, balance (accountStates!!betID) betToken]
 
-   userUpdateBetA_userWin = (userID, userA + betA + betAmount, userB)
-   betUpdateA_userWin = (betID, 0, betB)
+   userUpdate_userWin = 
+      if betToken==A 
+      then (userID, user_bal A + prize, user_bal B) 
+      else (userID, user_bal A, user_bal B + prize)
+   betUpdate_userWin =  
+      if betToken==A
+      then (betID, bet_bal A - betAmount, bet_bal B)
+      else (betID, bet_bal A, bet_bal B - betAmount)
+   userUpdate_userLose = 
+      if betToken==A
+      then (userID, user_bal A - betAmount, user_bal B)
+      else (userID, user_bal A, user_bal B - betAmount)
+   betUpdate_userLose = 
+      if betToken==A
+      then (betID, bet_bal A + betAmount, bet_bal B)
+      else (betID, bet_bal A, bet_bal B + betAmount)
 
-   userUpdateBetB_userWin = (userID, userA, userB + betB + betAmount)
-   betUpdateB_userWin = (betID, betA, 0)
 
-   userUpdateBetA_userLose = (userID, userA - betAmount, userB)
-   betUpdateA_userLose = (betID, betA + betAmount, betB)
-
-   userUpdateBetB_userLose = (userID, userA, userB - betAmount)
-   betUpdateB_userLose = (betID, betA, betB + betAmount)
-
-
-executeTx :: AccountStates -> Tx -> AccountStates
-executeTx states tx
-   | getReceiver tx == 2 = uniSwapExchange states tx
-   | getReceiver tx == 3 = betOnExchange states 1 tx
-   | otherwise = states
-
-executeBlock :: AccountStates -> TxBlock -> AccountStates
-executeBlock accountStates_init block = foldl executeTx accountStates_init block
-   
 
 
 p0_ac = (0, 10, 10)
@@ -111,25 +101,26 @@ p1_ac = (1, 10, 10)
 uniswap_ac = (2, 100, 100)
 bet_ac = (3, 100, 100)
 
-p0_ID :: AccountID
-p0_ID = 0
+initAccounts :: AccountStates
+initAccounts = [p0_ac, p1_ac, uniswap_ac, bet_ac]
 
-p1_ID :: AccountID
-p1_ID = 1
+executeTx :: AccountStates -> Tx -> AccountStates
+executeTx states tx
+   | getReceiver tx == 2 = uniSwapExchange states tx
+   | getReceiver tx == 3 = betOnExchange states 2 1.1 tx
+   | otherwise = states
 
-uniswap_ID :: AccountID
-uniswap_ID = 2
+executeBlock :: AccountStates -> TxBlock -> AccountStates
+executeBlock accountStates_init block = foldl executeTx accountStates_init block
+   
 
-bet_ID :: AccountID
-bet_ID = 3
-
-tx1 = (p0_ID, uniswap_ID, A, 2.0)
-tx2 = (p1_ID, uniswap_ID, A, 3.0)
-tx3 = (p0_ID, uniswap_ID, B, 2.0)
-tx4 = (p1_ID, uniswap_ID, B, 3.0)
+tx1 = (getAccountID p0_ac, getAccountID uniswap_ac, A, 2.0)
+tx2 = (getAccountID p1_ac, getAccountID uniswap_ac, A, 3.0)
+tx3 = (getAccountID p0_ac, getAccountID uniswap_ac, B, 2.0)
+tx4 = (getAccountID p1_ac, getAccountID uniswap_ac, B, 3.0)
 
 txBet :: TokenAmount -> Tx
-txBet amount = (p0_ID, bet_ID, A, amount)
+txBet amount = (getAccountID p0_ac, getAccountID bet_ac, A, amount)
 
 blockPayoff :: AccountStates -> TxBlock -> AccountID -> Payoff
 -- (could add choice of payoff token, now set to A)
@@ -139,8 +130,6 @@ blockPayoff initStates block userID = newBalance - oldBalance
    oldBalance = balance (initStates!!userID) A
 
 
-initAccounts :: AccountStates
-initAccounts = [p0_ac, p1_ac, uniswap_ac, bet_ac]
 
 block1 :: TxBlock
 block1 = [tx1, tx2, tx3, tx4]
@@ -152,7 +141,7 @@ txOrderingGame  = [opengame|
    :----------------------------:
    inputs    :      ;
    feedback  :      ;
-   operation : dependentDecision "player1" (const actionSpace);
+   operation : dependentDecision "proposer" (const actionSpace);
    outputs   : ordering ;
    returns   : blockPayoff initAccounts (blockPerm ordering) 0     ;
    :----------------------------:
@@ -174,14 +163,6 @@ choosePerm permID = pureAction permID ::- Nil
 -- analyseTxOrderingGame $ choosePerm 4
 
 
--- Somehow, permutations [tx1, tx2, tx3] and [tx2, tx1, tx3] are both equilibria. Why?
--- Is the only thing that matters that tx3 is last?
--- Yes! Since the only thing that matters is the ratio A/B in the uniswap account, the ordering of the two transactions doesn't matter, only that 2A is converted twice. 
-
-
-
-
-
 
 blockWithbet :: TokenAmount -> TxBlock
 blockWithbet amount = [tx1, tx2, tx3, txBet amount]
@@ -194,13 +175,13 @@ txOrderingGame_withBet  = [opengame|
 
    inputs    :      ;
    feedback  :      ;
-   operation : dependentDecision "player1" (const betAmounts);
+   operation : dependentDecision "proposer" (const betAmounts);
    outputs   : betAmount ;
    returns   :  0   ;
 
    inputs    :      ;
    feedback  :      ;
-   operation : dependentDecision "player1" (const actionSpace);
+   operation : dependentDecision "proposer" (const actionSpace);
    outputs   : ordering ;
    returns   : blockPayoff initAccounts (blockPerm ordering betAmount) 0     ;
    :----------------------------:
@@ -210,7 +191,7 @@ txOrderingGame_withBet  = [opengame|
   |]
   where
    betAmounts = [0,0.1..(balance (initAccounts!!0) A)]
-   actionSpace = [0..(product [1..4]-1)]
+   actionSpace = [0..(product [1..(length $ blockWithbet 0)]-1)]
    blockPerm = \orderChoice betAmount -> ((permutations $ blockWithbet betAmount)!!orderChoice)
 
 
@@ -219,4 +200,7 @@ betAndOrderStrat :: Double -> Int -> List '[Kleisli Stochastic () Double,
 betAndOrderStrat amount orderChoice = Kleisli (\x -> playDeterministically amount) ::- Kleisli (\x -> playDeterministically orderChoice) ::- Nil
 
 analyseTxOrderingGame_withBet strat = generateIsEq $ evaluate txOrderingGame_withBet strat void
+
 -- analyseTxOrderingGame_withBet $ betAndOrderStrat 4 0
+-- analyseTxOrderingGame_withBet $ betAndOrderStrat 4 17
+-- analyseTxOrderingGame_withBet $ betAndOrderStrat 8 17
