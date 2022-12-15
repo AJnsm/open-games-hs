@@ -198,13 +198,13 @@ varOffer_abs r x = playDeterministically r
 
 -- Strategies: p1 offers -> p2 responds -> BP offers -> p3 responds
 strat_bigPlayer_3Players_test = 
-    Kleisli (varOffer 0.51) ::- Kleisli  (varAccept 3.33) ::- 
-    Kleisli (varOffer 0.51) ::- Kleisli (varAccept 3.33) ::- Nil
+    Kleisli (varOffer $ 1/2) ::- Kleisli  (varAccept $ 10/3) ::- 
+    Kleisli (varOffer $ 1/2) ::- Kleisli (varAccept $ 10/3) ::- Nil
 
 
 strat_bigPlayer_3Players_eq = 
-    Kleisli (varOffer_abs 3.33) ::- Kleisli  (varAccept_conditional 3.33 6.66) ::-
-    Kleisli (varOffer_abs 3.33) ::- Kleisli (varAccept 3.33) ::- Nil
+    Kleisli (varOffer_abs $ 10/3) ::- Kleisli  (varAccept_conditional (10/3) (2*10/3)) ::-
+    Kleisli (varOffer_abs $ 10/3) ::- Kleisli (varAccept $ 10/3) ::- Nil
 
 -- *************** Evaluation ***************
 
@@ -250,9 +250,9 @@ bigPlayers_composed_4Players = [opengame|
 
 -- Strategies: p1 offers -> p2 responds -> BP offers -> p3 responds. -> BP2 offers -> p4 responds 
 strat_bigPlayer_4Players_eq = 
-    Kleisli (varOffer_abs 2.49) ::- Kleisli  (varAccept_conditional 2.5 7.5) ::-
-    Kleisli (varOffer_abs 2.49) ::- Kleisli  (varAccept_conditional 2.5 5) ::-
-    Kleisli (varOffer_abs 2.49) ::- Kleisli  (varAccept 2.5 )  ::- Nil
+    Kleisli (varOffer_abs $ 10/4) ::- Kleisli  (varAccept_conditional (10/4) (3*10/4)) ::-
+    Kleisli (varOffer_abs $ 10/4) ::- Kleisli  (varAccept_conditional (10/4) (10/2)) ::-
+    Kleisli (varOffer_abs $ 10/4) ::- Kleisli  (varAccept $10/4)  ::- Nil
 
 -- *************** Evaluation ***************
 

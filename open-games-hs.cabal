@@ -54,6 +54,7 @@ library
       Data.Utils
       Engine.BayesianGamesNonState
       Engine.IOGames
+      Examples.ClockworkFinance
       Examples.Markov.NStageMarkov
       Examples.PieCutting_BigPlayer
       Examples.PieCutting_open
