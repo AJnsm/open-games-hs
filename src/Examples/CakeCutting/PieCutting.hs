@@ -4,7 +4,7 @@
 
 
 
-module Examples.PieCutting where
+module Examples.CakeCutting.PieCutting where
 import Engine.Engine
 import Preprocessor.Preprocessor
 

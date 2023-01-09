@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Examples.PieCutting_BigPlayer where
+module Examples.CakeCutting.PieCutting_BigPlayer where
 import Engine.Engine
 import Preprocessor.Preprocessor
 import Engine.BayesianGames

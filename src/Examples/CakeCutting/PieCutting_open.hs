@@ -4,7 +4,7 @@
 
 
 
-module Examples.PieCutting_open where
+module Examples.CakeCutting.PieCutting_open where
 import Engine.Engine
 import Preprocessor.Preprocessor
 
@@ -164,9 +164,9 @@ pieSharingModule_closure pieSize = [opengame|
 
 contextContPie :: Double -> StochasticStatefulContext
           Offer
-          Examples.PieCutting_open.ResponderAction
+          ResponderAction
           Offer
-          Examples.PieCutting_open.ResponderAction
+          ResponderAction
 
 contextContPie fullPieSize = StochasticStatefulContext (pure ((),(fullPieSize, 0))) (\_ _ -> pure Accept)
 

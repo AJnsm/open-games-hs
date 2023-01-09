@@ -38,7 +38,6 @@ library
       Examples.Bayesian
       Examples.Decision
       Examples.SequentialMoves
-      Examples.PieCutting
       Examples.Auctions.AuctionSupportFunctions
       Examples.Auctions.ChooseReservePrice
       Examples.Auctions.DutchAuction
@@ -54,10 +53,11 @@ library
       Data.Utils
       Engine.BayesianGamesNonState
       Engine.IOGames
+      Examples.CakeCutting.PieCutting
+      Examples.CakeCutting.PieCutting_BigPlayer
+      Examples.CakeCutting.PieCutting_open
       Examples.ClockworkFinance
       Examples.Markov.NStageMarkov
-      Examples.PieCutting_BigPlayer
-      Examples.PieCutting_open
       Examples.Staking.AndGateMarkov
       Examples.Staking.AndGateMarkovMC
       Paths_open_games_hs
