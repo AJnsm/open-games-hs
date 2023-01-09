@@ -18,62 +18,49 @@ data ResponderAction = Accept | Reject
   deriving (Eq,Ord,Show)
 
 
-propagateChosenPiece :: Offer -> ResponderAction -> Double
-propagateChosenPiece offer response = if response == Accept then (fst offer) else (snd offer)
-
-fromOfferedPieceToOffer :: Double -> Double -> Offer
-fromOfferedPieceToOffer chosenPiece offeredPiece = (offeredPiece, chosenPiece - offeredPiece)
+fromChosenPieceToOffer :: Double -> Double -> Offer
+fromChosenPieceToOffer chosenPiece offeredPiece = (offeredPiece, chosenPiece - offeredPiece)
 
 
 -- *************** Games ***************
 
 respondToOffer_dependent = [opengame|
-
    inputs    : playerName, offer  ;
-   feedback  : response;
-
+   feedback  : ;
    :----------------------------:
    inputs    : playerName, offer  ;
    feedback  : ;
    operation : dependentRoleDecision  (\(x, y) -> [Accept,Reject]) ;
    outputs   : response ;
    returns   : 0;
-   // Postpone payoff calculation, so here just return a payoff of 0. 
-
    :----------------------------:
-
    outputs   : response ;
    returns   : ;
    |]
 
 
 offerNewSlice_dependent = [opengame|
-   inputs    : playerName, offer, response ;
+   inputs    : playerName, piece ;
    feedback  : ;
 
    :----------------------------:
-   inputs    : offer, response  ;
-   feedback  : ;
-   operation : forwardFunction $ uncurry propagateChosenPiece;
-   outputs   : chosenPiece ;
-   returns   : ;
 
-   inputs    : playerName, chosenPiece ;
+   inputs    : playerName, piece ;
    feedback  : ;
    operation : dependentRoleDecision (\(playerName, x) -> actionSpace x) ;
    outputs   : newOfferedPiece ;
    returns   : 0 ;
 
-   inputs    : chosenPiece, newOfferedPiece  ;
+   inputs    : piece, newOfferedPiece  ;
    feedback  : ;
-   operation : forwardFunction $ uncurry fromOfferedPieceToOffer;
+   operation : forwardFunction $ uncurry fromChosenPieceToOffer;
    outputs   : newOffer ;
    returns   : ;
 
    :----------------------------:
 
    outputs   : newOffer ;
-   returns   : newResponse;
+   returns   : ;
    |]
    where 
     actionSpace x = [0, 0.1 .. x]
@@ -91,21 +78,21 @@ orderBySize (p1Name, p2Name, offer, response) = if (pieceP1 >= pieceP2)
 -- ******** unit of 2 players with the BigPlayer rule *********
 bigPlayer_unit player2Name payoffBP = [opengame|
 
-   inputs    : inputBigPlayer, inputOffer  ;
+   inputs    : inputBigPlayer, inputPiece  ;
    feedback  : ;
 
    :----------------------------:
 
-   //Player 1 is last round's BigPlayer, so quickly "accepts" the full piece to propagate their piece into this round. They offer a slice to Player 2, but get no payoff yet!
-   inputs    : inputBigPlayer, inputOffer, Accept  ;
+   //Player 1 offers a slice to Player 2
+   inputs    : inputBigPlayer, inputPiece;
    feedback  :  ;
    operation : offerNewSlice_dependent;
    outputs   : offerP1   ;
-   returns   : responseP2_backwards ;
+   returns   :  ;
 
    //Player 2 responds
    inputs    : player2Name, offerP1   ;
-   feedback  : responseP2_backwards;
+   feedback  : ;
    operation : respondToOffer_dependent ;
    outputs   : responseP2   ;
    returns   :  ;
@@ -134,7 +121,7 @@ bigPlayer_unit player2Name payoffBP = [opengame|
 
    :----------------------------:
 
-   outputs   : bigPlayerName, fromOfferedPieceToOffer biggestPiece biggestPiece ;
+   outputs   : bigPlayerName, biggestPiece ;
    returns   :  ;
    |]
 
@@ -143,37 +130,37 @@ bigPlayer_unit player2Name payoffBP = [opengame|
 
 bigPlayers_composed_3Players = [opengame|
 
-   inputs    : inputBigPlayer, inputOffer ;
+   inputs    : inputBigPlayer, inputPiece ;
    feedback  : ;
 
    :----------------------------:
 
-   inputs    : inputBigPlayer, inputOffer ;
+   inputs    : inputBigPlayer, inputPiece ;
    feedback  : ;
    operation : bigPlayer_unit "p2" 0 ;
-   outputs   : bigPlayer1, offer1 ;
+   outputs   : bigPlayer1, piece1 ;
    returns   :  ;
 
-   inputs    : bigPlayer1, offer1;
+   inputs    : bigPlayer1, piece1;
    feedback  : ;
    operation : bigPlayer_unit "p3" 1 ;
-   outputs   : bigPlayer2, newOffer  ;
+   outputs   : bigPlayer2, newPiece  ;
    returns   :  ;
    
    :----------------------------:
 
-   outputs   : bigPlayer2, newOffer   ;
+   outputs   : bigPlayer2, newPiece   ;
    returns   :  ;
    |]
 
 
 contextContPie :: Double -> StochasticStatefulContext
-          (String, Offer)
+          (String, Pie)
           ()
-          (String, Offer)
+          (String, Pie)
           ()
 contextContPie fullPieSize = StochasticStatefulContext 
-    (pure ((),("p1", (fullPieSize, 0)))) (\_ _-> pure ())
+    (pure ((),("p1", fullPieSize))) (\_ _-> pure ())
 
 
 
@@ -262,5 +249,6 @@ isEquilibrium_BigPlayer_4Players strat = generateIsEq $ evalOpenPie_BigPlayer_4P
 
 -- run: 
 
--- isEquilibrium_BigPlayer_4Players strat_bigPlayer_4Players_test
 -- isEquilibrium_BigPlayer_3Players strat_bigPlayer_3Players_test
+-- isEquilibrium_BigPlayer_3Players strat_bigPlayer_3Players_eq
+-- isEquilibrium_BigPlayer_4Players strat_bigPlayer_4Players_eq

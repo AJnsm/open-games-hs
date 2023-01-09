@@ -43,9 +43,14 @@ respondToOffer playerName = [opengame|
    returns   : 0;
    // Postpone payoff calculation, so here just return a payoff of 0. 
 
+   inputs    : offer, response  ;
+   feedback  : ;
+   operation : forwardFunction $ uncurry propagateChosenPiece;
+   outputs   : chosenPiece ;
+   returns   : ;
    :----------------------------:
 
-   outputs   : offer, response ;
+   outputs   : chosenPiece ;
    returns   : ;
    |]
 
@@ -63,15 +68,11 @@ fromOfferedPieceToOffer chosenPiece offeredPiece = (offeredPiece, chosenPiece - 
 
 
 offerNewSlice playerName = [opengame|
-   inputs    : offer, response  ;
+   inputs    : chosenPiece  ;
    feedback  : ;
 
    :----------------------------:
-   inputs    : offer, response  ;
-   feedback  : ;
-   operation : forwardFunction $ uncurry propagateChosenPiece;
-   outputs   : chosenPiece ;
-   returns   : ;
+
 
    inputs    : chosenPiece  ;
    feedback  : ;
@@ -102,11 +103,11 @@ openPieSharing_unit playerName = [opengame|
    inputs    : inputOffer  ;
    feedback  : inputResponse;
    operation : respondToOffer playerName ;
-   outputs   : offer, response ;
+   outputs   : chosenPiece ;
    returns   : ;
 
 
-   inputs    : offer, response  ;
+   inputs    : chosenPiece ;
    feedback  : ;
    operation : offerNewSlice playerName ;
    outputs   : newOffer   ;
@@ -218,8 +219,8 @@ pureAccept x = playDeterministically Accept
 pureReject :: Offer -> Stochastic ResponderAction
 pureReject x = playDeterministically Reject
 
-halfAccept :: Offer -> Stochastic ResponderAction
-halfAccept x = if (fst x) >= (snd x) then playDeterministically Accept else playDeterministically Reject
+acceptHalf :: Offer -> Stochastic ResponderAction
+acceptHalf x = if (fst x) >= (snd x) then playDeterministically Accept else playDeterministically Reject
 
 
 smallOffer :: Double -> Stochastic Double
@@ -231,6 +232,12 @@ bigOffer x = playDeterministically $ 0.8*x
 halfOffer :: Double -> Stochastic Double
 halfOffer x = playDeterministically $ 0.5*x
 
+offerOneThird :: Double -> Stochastic Double
+offerOneThird x = playDeterministically $ 10/3
+
+offerTwoThirds :: Double -> Stochastic Double
+offerTwoThirds x = playDeterministically $ 20/3
+
 zeroOffer :: Double -> Stochastic Double
 zeroOffer x = playDeterministically $ 0
 
@@ -241,13 +248,13 @@ strat_2p_pureAc_smallOf :: List [Kleisli Stochastic Offer ResponderAction,
          Kleisli Stochastic Double Double]
 strat_2p_pureAc_smallOf = Kleisli pureAccept ::- Kleisli smallOffer ::- Kleisli pureAccept ::- Kleisli smallOffer ::- Nil
 
-strat_2p_halfAc_smallOf = Kleisli halfAccept ::- Kleisli smallOffer ::- Kleisli halfAccept ::- Kleisli smallOffer ::- Nil
+strat_2p_halfAc_smallOf = Kleisli acceptHalf ::- Kleisli smallOffer ::- Kleisli acceptHalf ::- Kleisli smallOffer ::- Nil
 
-strat_2p_halfAc_halfOf = Kleisli halfAccept ::- Kleisli halfOffer ::- Kleisli halfAccept ::- Kleisli halfOffer ::- Nil
+strat_2p_halfAc_halfOf = Kleisli acceptHalf ::- Kleisli halfOffer ::- Kleisli acceptHalf ::- Kleisli halfOffer ::- Nil
 
 strat_2p_purRej_halfOf = Kleisli pureReject ::- Kleisli halfOffer ::- Kleisli pureReject ::- Kleisli halfOffer ::- Nil
 
-strat_2p_eq = Kleisli pureAccept ::- Kleisli halfOffer ::- Kleisli halfAccept ::- Kleisli zeroOffer ::- Nil
+strat_2p_eq = Kleisli pureAccept ::- Kleisli halfOffer ::- Kleisli acceptHalf ::- Kleisli zeroOffer ::- Nil
 
         
 
@@ -289,12 +296,22 @@ openPieSharing_threePlayers = [opengame|
    returns   : newResponse3 ;
    |]
 
-strat_3p_greedyP1 = Kleisli halfAccept ::- Kleisli smallOffer ::- Kleisli halfAccept ::- Kleisli halfOffer ::- Kleisli halfAccept ::- Kleisli halfOffer ::- Nil
+strat_3p_greedyP1 = Kleisli acceptHalf ::- Kleisli smallOffer ::- Kleisli acceptHalf ::- Kleisli halfOffer ::- Kleisli acceptHalf ::- Kleisli halfOffer ::- Nil
 
-strat_3p_fairPlay = Kleisli halfAccept ::- Kleisli halfOffer ::- Kleisli halfAccept ::- Kleisli halfOffer ::- Kleisli halfAccept ::- Kleisli halfOffer ::- Nil
+strat_3p_fairPlay = Kleisli acceptHalf ::- Kleisli halfOffer ::- Kleisli acceptHalf ::- Kleisli halfOffer ::- Kleisli acceptHalf ::- Kleisli halfOffer ::- Nil
 
-strat_3p_eq = Kleisli halfAccept ::- Kleisli halfOffer ::- Kleisli halfAccept ::- Kleisli halfOffer ::- Kleisli halfAccept ::- Kleisli zeroOffer ::- Nil
+strat_3p_eq = Kleisli acceptHalf ::- Kleisli halfOffer ::- Kleisli acceptHalf ::- Kleisli halfOffer ::- Kleisli acceptHalf ::- Kleisli zeroOffer ::- Nil
+
+strat_3p_nice = Kleisli acceptHalf ::- Kleisli offerTwoThirds ::- Kleisli acceptHalf ::- Kleisli offerOneThird ::- Kleisli acceptHalf ::- Kleisli zeroOffer ::- Nil
 
 
 evalOpenPie_threePlayers strat = evaluate (openPieSharing_threePlayers) strat (contextContPie 10)
 isEquilibriumPieSharingGameOpen_threePlayers strat = generateIsEq $ evalOpenPie_threePlayers strat 
+
+
+-- Run:
+
+-- isEquilibriumPieSharingGameOpen_threePlayers strat_3p_greedyP1
+-- isEquilibriumPieSharingGameOpen_threePlayers strat_3p_fairPlay
+-- isEquilibriumPieSharingGameOpen_threePlayers strat_3p_nice
+-- isEquilibriumPieSharingGameOpen_threePlayers strat_3p_eq

@@ -38,18 +38,30 @@ balance (userID, amountA, amountB) token
     | token==A = amountA
     | otherwise =  amountB
 
+updateAccount :: Account -> Token -> TokenAmount -> Account
+updateAccount (acID, bA, bB) token amount
+   | token == A = (acID, bA + amount, bB)
+   | otherwise = (acID, bA, bB + amount)
+
+
 uniSwapExchange :: AccountStates -> Tx -> AccountStates
+-- Old state -> transaction -> new state
 -- Use lenses to 'modify' account states
+-- If the user does not have sufficient funds, fine the user (a gas fee?) propagate the old state
 uniSwapExchange accountStates (userID, uniSwapID, token, tokenAmount)
-   | userbalanceInsufficient = accountStates
-   | otherwise = accountStates & (ix userID) .~ userUpdateA2B & (ix uniSwapID) .~ uniswapUpdate
+   | userbalanceInsufficient = accountStates & (ix userID) .~ userFined
+   | otherwise = accountStates & (ix userID) .~ userUpdate & (ix uniSwapID) .~ uniswapUpdate
   where
    user_bal = balance (accountStates!!userID)
    userbalanceInsufficient = user_bal token < tokenAmount
+   userFined = 
+      if token ==A
+      then (userID, minimum [0, user_bal A - 0.1] , user_bal B)
+      else (userID, user_bal A ,  minimum [0, user_bal B - 0.1])
    uniSwap_bal = balance (accountStates!!uniSwapID)
    dA = uniSwap_bal A * tokenAmount / (uniSwap_bal B + tokenAmount) 
    dB = uniSwap_bal B * tokenAmount / (uniSwap_bal A + tokenAmount) 
-   userUpdateA2B = 
+   userUpdate = 
       if token == A
       then (userID, user_bal A - tokenAmount, user_bal B + dB)
       else (userID, user_bal A + dA, user_bal B - tokenAmount)
@@ -64,7 +76,7 @@ betOnExchange :: AccountStates -> AccountID -> Double -> Tx -> AccountStates
 -- Old state, price oracle, bet threshold, bet amount, new state
 -- Use lenses to 'modify' account states
 betOnExchange accountStates oracleID ratio (userID, betID, betToken, betAmount)
-   | (userbalanceInsufficient || betAmount<=0) = accountStates
+   | (userbalanceInsufficient || betAmount<0) = accountStates & (ix userID) .~ userFined
    | ((uniSwap_bal A)/(uniSwap_bal B) >= ratio) = accountStates & (ix userID) .~ userUpdate_userWin & (ix betID) .~ betUpdate_userWin
    | ((uniSwap_bal A)/(uniSwap_bal B) <  ratio) = accountStates & (ix userID) .~ userUpdate_userLose & (ix betID) .~ betUpdate_userLose
   where
@@ -72,29 +84,16 @@ betOnExchange accountStates oracleID ratio (userID, betID, betToken, betAmount)
    bet_bal = balance (accountStates!!betID)
    user_bal = balance (accountStates!!userID)
    userbalanceInsufficient = user_bal betToken < betAmount
-
+   userFined = 
+      if betToken ==A
+      then (userID, minimum [0, user_bal A - 0.1] , user_bal B)
+      else (userID, user_bal A ,  minimum [0, user_bal B - 0.1])
    -- The prize is either the amount bet, or the remaining balance if that is less
    prize = minimum [betAmount, balance (accountStates!!betID) betToken]
-
-   userUpdate_userWin = 
-      if betToken==A 
-      then (userID, user_bal A + prize, user_bal B) 
-      else (userID, user_bal A, user_bal B + prize)
-   betUpdate_userWin =  
-      if betToken==A
-      then (betID, bet_bal A - betAmount, bet_bal B)
-      else (betID, bet_bal A, bet_bal B - betAmount)
-   userUpdate_userLose = 
-      if betToken==A
-      then (userID, user_bal A - betAmount, user_bal B)
-      else (userID, user_bal A, user_bal B - betAmount)
-   betUpdate_userLose = 
-      if betToken==A
-      then (betID, bet_bal A + betAmount, bet_bal B)
-      else (betID, bet_bal A, bet_bal B + betAmount)
-
-
-
+   userUpdate_userWin = updateAccount (accountStates!!userID) betToken prize
+   betUpdate_userWin =  updateAccount (accountStates!!betID) betToken (-prize)
+   userUpdate_userLose = updateAccount (accountStates!!userID) betToken (-prize)
+   betUpdate_userLose = updateAccount (accountStates!!betID) betToken betAmount
 
 p0_ac = (0, 10, 10)
 p1_ac = (1, 10, 10)
@@ -166,6 +165,7 @@ choosePerm permID = pureAction permID ::- Nil
 
 blockWithbet :: TokenAmount -> TxBlock
 blockWithbet amount = [tx1, tx2, tx3, txBet amount]
+
 
 txOrderingGame_withBet  = [opengame|
    inputs    :      ;
